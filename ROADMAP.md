@@ -50,15 +50,16 @@ Cada fase tem **objetivo** e **"pronto quando"** (como saber que terminou). Não
 - [x] 3 comandos: `go mod init`, `go run .`, `go build`
 - [x] `fmt.Println(...)` rodando com `go run .`
 
-### Fase 1 — A linguagem, no terminal  🟡 *em andamento*
+### Fase 1 — A linguagem, no terminal  🟡 *em andamento*float64(p.Quantidade)
 Conceitos:
 - [x] variáveis, `:=` vs `=`, tipagem estática (Go barra erro de tipo na compilação)
 - [x] público/privado pela **maiúscula** (e por que `main` é minúsculo)
 - [x] `struct` — o "registro de produto"
 - [x] `slice` (`[]Produto`) — a lista / o "browse"; índice começa em **0**
 - [x] `for ... range` + o `_` (blank identifier) e a regra de variável não usada
-- [x] métodos com *receiver* (ex.: `ValorTotal()`) — conceito visto
-- [ ] **funções + retorno de erro** (`func ... (x, error)` + `if err != nil`)  ← próximo
+- [x] métodos com *receiver* (ex.: `ValorTotal()`) — praticado
+- [x] funções: parâmetros, múltiplos retornos `(int, int)`, escopo de variável (`somaNumb`, `dividir`, `ehPar`, `tabuada`)
+- [ ] **retorno de erro** (`func ... (x, error)` + `if err != nil`)  ← próximo (Lição 5)
 - [ ] `map`, ponteiros (`*` / `&`) com calma
 - [ ] (reforço) [Tour of Go](https://go.dev/tour) + [Go by Example](https://gobyexample.com)
 - **Pronto quando:** criar `struct Produto` + `[]Produto` + `for range` → ✅ feito
@@ -130,10 +131,10 @@ PWD      = consys
 
 # 📒 Anotações das Lições — Fase 1 (para estudar em casa)
 
-> **🔖 VOCÊ PAROU NA LIÇÃO 4** (funções + métodos).
-> **Próximos passos:**
-> 1. Mini-desafio da Lição 4 → função `valorTotalEstoque(produtos []Produto) float64`
-> 2. **Lição 5** — funções que retornam erro (`if err != nil`) → é o que destrava a Fase 2 (servidor HTTP)
+> **🔖 VOCÊ ESTÁ NA LIÇÃO 5** (tratamento de erro — `if err != nil`).
+> **Lição 4 concluída** ✅ — funções (`somaNumb`, `dividir`, `tabuada`), condicional (`ehPar`), métodos e `for range`.
+> **Agora:** Lição 5 — funções que retornam `error`. É o que destrava a **Fase 2 (servidor HTTP)**.
+> Pendência leve (opcional): consolidar `valoTota()` em `valorTotalEstoque(produtos []Produto) float64` — receber a lista e devolver o total somado, reusando o método `ValorTotal()`.
 
 ## 🏠 Quando chegar em casa (ambiente no Mac)
 - [ ] Instalar o Go: https://go.dev/dl — conferir com `go version`
@@ -217,6 +218,22 @@ func main() {
 }
 ```
 
-### ⏳ Mini-desafio pendente (Lição 4)
-Criar `func valorTotalEstoque(produtos []Produto) float64` que percorre a lista, soma o `ValorTotal()` de cada produto e devolve o total geral. Chamar na `main` e imprimir.
-Dica: comece com `total := 0.0` e vá somando dentro do `for`.
+### ⏳ Mini-desafio (Lição 4) — opcional, consolidar antes de seguir
+Hoje o `valoTota()` cria a lista e imprime cada total inline. Refatore para o padrão de "repositório":
+`func valorTotalEstoque(produtos []Produto) float64` que **recebe** a lista, percorre somando o `ValorTotal()` de cada produto e **devolve** o total geral.
+Dica: comece com `total := 0.0` e vá somando dentro do `for`. (E traga de volta o método `ValorTotal()` em vez de repetir `Preco*float64(Quantidade)`.)
+
+---
+
+## Lição 5 — tratamento de erro (o "BEGIN SEQUENCE" do Go)
+- Go **não tem exceção / try-catch / `BEGIN SEQUENCE..RECOVER`**. Erro é um **valor retornado**.
+- **Convenção:** o **último** valor de retorno é `error`. Ex.: `func dividir(a, b int) (int, error)`.
+- `error` é uma **interface embutida**; **`nil` = deu tudo certo**.
+- Quem chama **sempre checa**, na hora: `r, err := dividir(10, 0); if err != nil { ... }`.
+- Criar erro: `errors.New("mensagem")` (import `"errors"`) ou, com formatação, `fmt.Errorf("produto %s não encontrado", cod)`.
+- ⚠️ Divisão por zero em `int` **dá panic** (derruba o programa) — por isso `dividir` é o exemplo perfeito pra retornar `error`.
+- 🔑 É o padrão da API inteira (Fase 2+): `produto, err := buscarProduto(cod)` → se `err != nil`, o handler devolve **404/400**; senão, devolve o JSON. Esse é o esqueleto de toda rota.
+
+### Exercícios da Lição 5
+1. Faça `dividir` virar `func dividir(a, b int) (int, int, error)`: se `b == 0`, retorna erro; senão, quociente, resto e `nil`.
+2. **(o que importa pra API)** `func buscarProduto(produtos []Produto, codigo string) (Produto, error)`: percorre a lista; se achar o código, devolve o produto e `nil`; se não achar, devolve `Produto{}` e um erro com `fmt.Errorf`. No `main`, teste com um código que existe e um que não existe, sempre checando `if err != nil`.

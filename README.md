@@ -52,18 +52,20 @@ Transformar o conhecimento em sistemas desktop (ERP, CRUD, SQL) em habilidades d
 
 ---
 
-## 💻 Como Rodar
+## 📂 Estrutura
 
-Para executar os exemplos atuais:
-
-```bash
-go run main.go
+```
+exercicios/licao1a4/   fundamentos (variáveis, struct, slice, for, funções)
+exercicios/licao5/     tratamento de erro (if err != nil)
+api/                   o projeto de verdade (Fase 2+)
 ```
 
-Para gerar o executável:
+## 💻 Como Rodar
+
+Cada pasta com `main.go` é um programa. Rode pelo caminho da pasta:
 
 ```bash
-go build -o estudosGo
+go run ./exercicios/licao5
 ```
 
 ---
