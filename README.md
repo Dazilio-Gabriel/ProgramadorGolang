@@ -77,5 +77,3 @@ go run ./exercicios/licao5
 - [Documentação Oficial](https://go.dev/doc/)
 
 ---
-
-_Desenvolvido com foco na transição tecnológica Consys/Harbour -> Go._
