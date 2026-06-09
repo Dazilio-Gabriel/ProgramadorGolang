@@ -1,6 +1,7 @@
 package main
 
 import "fmt"
+
 type Produto struct {
 	Codigo     string
 	Nome       string
@@ -9,34 +10,72 @@ type Produto struct {
 }
 
 func main() {
-	produtos := listarProdutos()
+	mostrarProduto()
+	mostrarProdutosArray()
+	somaNumb(1, 4)
+	fmt.Println(dividir(10, 5))
+	tabuada(10)
+	valoTota()
+}
 
-	fmt.Println("\nLista de Produtos:")
-	for i, p := range produtos {
-		fmt.Printf("%d - %-10s | Preço: R$%.2f | Estoque: %d | Total: R$%.2f\n",
-			i+1, p.Nome, p.Preco, p.Quantidade, p.ValorTotal())
+func somaNumb(a, b int) int {
+	return a + b
+}
+
+func dividir(a, b int) (int, int) {
+	q := a / b
+	r := a % b
+	return q, r
+}
+
+func ehPar(a int) bool {
+	if a%2 == 0 {
+		return true
+	} else {
+		return false
 	}
-
-	totalGeral := valorTotalEstoque(produtos)
-	fmt.Printf("\n💰 Valor Total em Estoque: R$%.2f\n", totalGeral)
 }
-
-func (p Produto) ValorTotal() float64 {
-	return p.Preco * float64(p.Quantidade)
+func tabuada(a int) {
+	for i := 1; i <= 10; i++ {
+		fmt.Println(i, "- ", a*i)
+	}
 }
-
-func listarProdutos() []Produto {
-	return []Produto{
+func valoTota() {
+	laArraBrow := []Produto{
 		{Codigo: "001", Nome: "Pepsi", Preco: 3.99, Quantidade: 11},
-		{Codigo: "002", Nome: "Coca Cola", Preco: 5.99, Quantidade: 52},
-		{Codigo: "003", Nome: "Guaraná", Preco: 3.50, Quantidade: 31},
+		{Codigo: "002", Nome: "Coca", Preco: 3.99, Quantidade: 52},
+		{Codigo: "003", Nome: "Guarana", Preco: 3.99, Quantidade: 31},
+	}
+
+	for i, p := range laArraBrow {
+		fmt.Println(i, "-", p.Nome, "valor do estoque ", p.Preco*float64(p.Quantidade))
 	}
 }
 
-func valorTotalEstoque(produtos []Produto) float64 {
-	total := 0.0
-	for _, p := range produtos {
-		total += p.ValorTotal()
+func mostrarProduto() {
+
+	var p1 Produto
+	p1.Codigo = "001"
+	p1.Nome = "Coca Cola"
+	p1.Preco = 5.99
+	p1.Quantidade = 4
+
+	p2 := Produto{Codigo: "002", Nome: "Pepsi", Preco: 3.99, Quantidade: 5}
+
+	fmt.Println("\nproduto 1 =", p1)
+	fmt.Println("produto 2 =", p2)
+}
+
+func mostrarProdutosArray() {
+
+	fmt.Println()
+	teste := []Produto{
+		{Codigo: "001", Nome: "Pepsi", Preco: 3.99, Quantidade: 11},
+		{Codigo: "002", Nome: "Coca", Preco: 3.99, Quantidade: 52},
+		{Codigo: "003", Nome: "Guarana", Preco: 3.99, Quantidade: 31},
 	}
-	return total
+
+	for _, p := range teste {
+		fmt.Println(p.Nome, p.Preco, p.Quantidade, p.Codigo)
+	}
 }
