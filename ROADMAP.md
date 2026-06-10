@@ -50,7 +50,7 @@ Cada fase tem **objetivo** e **"pronto quando"** (como saber que terminou). Não
 - [x] 3 comandos: `go mod init`, `go run .`, `go build`
 - [x] `fmt.Println(...)` rodando com `go run .`
 
-### Fase 1 — A linguagem, no terminal  🟡 *em andamento*float64(p.Quantidade)
+### Fase 1 — A linguagem, no terminal  ✅ *núcleo concluído* (map/ponteiros adiados — ver nota)
 Conceitos:
 - [x] variáveis, `:=` vs `=`, tipagem estática (Go barra erro de tipo na compilação)
 - [x] público/privado pela **maiúscula** (e por que `main` é minúsculo)
@@ -59,12 +59,12 @@ Conceitos:
 - [x] `for ... range` + o `_` (blank identifier) e a regra de variável não usada
 - [x] métodos com *receiver* (ex.: `ValorTotal()`) — praticado
 - [x] funções: parâmetros, múltiplos retornos `(int, int)`, escopo de variável (`somaNumb`, `dividir`, `ehPar`, `tabuada`)
-- [ ] **retorno de erro** (`func ... (x, error)` + `if err != nil`)  ← próximo (Lição 5)
-- [ ] `map`, ponteiros (`*` / `&`) com calma
+- [x] **retorno de erro** (`func ... (x, error)` + `if err != nil`)  ✅ Lição 5
+- [ ] `map`, ponteiros (`*` / `&`) — **adiados de propósito** (não pulados): ponteiros entram na **Fase 3** (`rows.Scan(&campo)`); `map` quando aparecer
 - [ ] (reforço) [Tour of Go](https://go.dev/tour) + [Go by Example](https://gobyexample.com)
 - **Pronto quando:** criar `struct Produto` + `[]Produto` + `for range` → ✅ feito
 
-### Fase 2 — Primeiro servidor HTTP (2 a 3 dias)
+### Fase 2 — Primeiro servidor HTTP (2 a 3 dias)  🟡 *VOCÊ ESTÁ AQUI*
 - [ ] Pacotes `net/http` (servidor) e `encoding/json` (devolver JSON)
 - [ ] Rota `GET /api/produtos` devolvendo uma lista **fixa, hardcoded** em JSON
 - [ ] Testar com navegador e com **Thunder Client** (extensão do VS Code)
@@ -131,10 +131,11 @@ PWD      = consys
 
 # 📒 Anotações das Lições — Fase 1 (para estudar em casa)
 
-> **🔖 VOCÊ ESTÁ NA LIÇÃO 5** (tratamento de erro — `if err != nil`).
-> **Lição 4 concluída** ✅ — funções (`somaNumb`, `dividir`, `tabuada`), condicional (`ehPar`), métodos e `for range`.
-> **Agora:** Lição 5 — funções que retornam `error`. É o que destrava a **Fase 2 (servidor HTTP)**.
-> Pendência leve (opcional): consolidar `valoTota()` em `valorTotalEstoque(produtos []Produto) float64` — receber a lista e devolver o total somado, reusando o método `ValorTotal()`.
+> **🔖 VOCÊ ESTÁ NA LIÇÃO 6** (primeiro servidor HTTP — `net/http` + `encoding/json`) → a **Fase 2 começou**.
+> **Fase 1 (a linguagem) — núcleo concluído** ✅: variáveis, struct, slice, `for range`, funções/métodos e **tratamento de erro** (Lição 5).
+> **Adiados de propósito (NÃO esquecidos):** `map` e **ponteiros** (`*`/`&`). Entram quando forem úteis de verdade — ponteiros na **Fase 3** (no `rows.Scan(&campo)` do MySQL); `map` quando aparecer. Aprender na hora que o conceito tem uso concreto gruda muito melhor.
+> **Agora:** Lição 6 — subir um servidor que devolve a lista de produtos em **JSON** na rota `GET /api/produtos`.
+> Pendência leve (opcional): no exercício 1 da Lição 5, `diviNumb` devolver também o **resto** (`(int, int, error)`).
 
 ## 🏠 Quando chegar em casa (ambiente no Mac)
 - [ ] Instalar o Go: https://go.dev/dl — conferir com `go version`
@@ -236,4 +237,20 @@ Dica: comece com `total := 0.0` e vá somando dentro do `for`. (E traga de volta
 
 ### Exercícios da Lição 5
 1. Faça `dividir` virar `func dividir(a, b int) (int, int, error)`: se `b == 0`, retorna erro; senão, quociente, resto e `nil`.
-2. **(o que importa pra API)** `func buscarProduto(produtos []Produto, codigo string) (Produto, error)`: percorre a lista; se achar o código, devolve o produto e `nil`; se não achar, devolve `Produto{}` e um erro com `fmt.Errorf`. No `main`, teste com um código que existe e um que não existe, sempre checando `if err != nil`.
+2. **(o que importa pra API)** `func buscarProduto(produtos []Produto, codigo string) (Produto, error)`: percorre a lista; se achar o código, devolve o produto e `nil`; se não achar, devolve `Produto{}` e um erro com `fmt.Errorf`. No `main`, teste com um código que existe e um que não existe, sempre checando `if err != nil`.  ✅ feito (`exercicios/licao5/main.go`)
+
+---
+
+## Lição 6 — primeiro servidor HTTP (início da Fase 2)
+O `.exe` Harbour desenha a tela e espera o usuário teclar; um servidor web fica num **loop esperando "requests"** chegarem pela rede e responde cada um. São **3 peças**:
+
+- **1) O servidor (`net/http`):** `http.ListenAndServe(":8080", nil)` liga na porta 8080 e **trava ali**, esperando acesso a `http://localhost:8080`. É o loop principal — por isso costuma ser a **última linha** do `main`. Só sai do loop se der erro.
+- **2) Rota + handler:** `http.HandleFunc("/api/produtos", listarProdutosHandler)` diz *"quando pedirem essa URL, chame essa função"*. O **handler** tem **assinatura fixa**: `func(w http.ResponseWriter, r *http.Request)`.
+  - `w` (ResponseWriter) = **onde você escreve a resposta** — a "tela", mas cuspindo JSON pela rede em vez de `@ SAY`.
+  - `r` (Request) = **o pedido que chegou** (quem pediu, parâmetros). Por enquanto só usamos o `w`; o `r` entra na frente (ler `{id}`, corpo do POST...).
+- **3) JSON (`encoding/json`):** `json.NewEncoder(w).Encode(produtos)` pega o `[]Produto` e **cospe o JSON na resposta**. É AGORA que importa os campos do struct serem **maiúsculos**: a lib `json` só enxerga campo público.
+- 🔑 O `listarProdutos()` da Lição 4 **não muda nada** — só se troca o `fmt.Println` (terminal) por mandar o JSON pela rede.
+
+**Ordem no `main`:** 1º registra a rota (`HandleFunc`) → 2º liga o servidor (`ListenAndServe`, que trava ali escutando).
+
+**Pronto quando:** `go run .` dentro de `api/` (vai *travar* = está escutando, é normal), abrir `http://localhost:8080/api/produtos` no navegador e ver o JSON. Parar o servidor: `Ctrl+C`.

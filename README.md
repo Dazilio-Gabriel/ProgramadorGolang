@@ -13,8 +13,8 @@ Transformar o conhecimento em sistemas desktop (ERP, CRUD, SQL) em habilidades d
 | Fase  | Descrição                           | Status          |
 | :---- | :---------------------------------- | :-------------- |
 | **0** | Configuração do Ambiente            | ✅ Concluído    |
-| **1** | Fundamentos da Linguagem (Terminal) | 🟡 Em andamento |
-| **2** | Primeiro Servidor HTTP              | 📅 Planejado    |
+| **1** | Fundamentos da Linguagem (Terminal) | ✅ Concluído    |
+| **2** | Primeiro Servidor HTTP              | 🟡 Em andamento |
 | **3** | Conexão MySQL (check_fl02)          | 📅 Planejado    |
 | **4** | Frontend (AJAX / Fetch)             | 📅 Planejado    |
 | **5** | CRUD Completo                       | 📅 Planejado    |
