@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Produto struct {
@@ -14,19 +18,43 @@ type Produto struct {
 }
 
 func main() {
-	http.HandleFunc("/api/produtos", listarProdutosHandler)
+
+	http.HandleFunc("/api/produtos", listaProdutosBancoDeDados)
 	log.Println("servidor no ar → http://localhost:8080/api/produtos (Ctrl+C para parar)")
 	http.ListenAndServe(":8080", nil)
 }
 
-func listarProdutosHandler(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(mostrarProdutosArray())
-}
+func listaProdutosBancoDeDados(w http.ResponseWriter, r *http.Request) {
+	var id int
+	var codigo string
+	var nome string
+	var preco float64
+	var quantidade int
 
-func mostrarProdutosArray() []Produto {
-	return []Produto{
-		{Codigo: "001", Nome: "Pepsi", Preco: 3.99, Quantidade: 11},
-		{Codigo: "002", Nome: "Coca", Preco: 3.99, Quantidade: 52},
-		{Codigo: "003", Nome: "Guarana", Preco: 3.99, Quantidade: 31},
+	ctx := context.Background()
+
+	db, err := sql.Open("mysql", "root:consys@tcp(localhost:3306)/apigo")
+	if err != nil {
+		log.Fatal("erro ao abrir o banco: ", err)
 	}
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal("erro ao conectar no banco: ", err)
+	}
+	log.Println("conectado ao MySQL")
+
+	rows, err := db.QueryContext(ctx, "SELECT id, codigo, nome, preco, quantidade FROM PRODUTOS")
+
+	var vetor []Produto
+	for rows.Next() {
+		err = rows.Scan(&id, &codigo, &nome, &preco, &quantidade)
+		if err != nil {
+			log.Fatal(err)
+		}
+		p := Produto{Codigo: codigo, Nome: nome, Preco: preco, Quantidade: quantidade}
+		vetor = append(vetor, p)
+
+	}
+	json.NewEncoder(w).Encode(vetor)
 }
