@@ -20,19 +20,18 @@ type Produto struct {
 func main() {
 
 	http.HandleFunc("/api/produtos", listaProdutosBancoDeDados)
+	http.Handle("/", http.FileServer(http.Dir("web")))
 	http.ListenAndServe(":8080", nil)
 }
 
 func listaProdutosBancoDeDados(w http.ResponseWriter, r *http.Request) {
-	var id int
 	var codigo string
 	var nome string
 	var preco float64
-	var quantidade int
 
 	ctx := context.Background()
 
-	db, err := sql.Open("mysql", "root:consys@tcp(localhost:3306)/apigo")
+	db, err := sql.Open("mysql", "root:consys@tcp(localhost:3306)/consys")
 	if err != nil {
 		log.Fatal("erro ao abrir o banco: ", err)
 	}
@@ -44,7 +43,7 @@ func listaProdutosBancoDeDados(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("conectado ao MySQL")
 
-	rows, err := db.QueryContext(ctx, "SELECT * FROM PRODUTOS")
+	rows, err := db.QueryContext(ctx, "SELECT sr_recno,ccodigo,cdesc,cvenda FROM alqui")
 	if err != nil {
 		log.Fatal("Select incorreto")
 	}
@@ -52,11 +51,11 @@ func listaProdutosBancoDeDados(w http.ResponseWriter, r *http.Request) {
 
 	var vetor []Produto
 	for rows.Next() {
-		err = rows.Scan(&id, &codigo, &nome, &preco, &quantidade)
+		err = rows.Scan(&codigo, &nome, &preco)
 		if err != nil {
 			log.Fatal(err)
 		}
-		p := Produto{Codigo: codigo, Nome: nome, Preco: preco, Quantidade: quantidade}
+		p := Produto{Codigo: codigo, Nome: nome, Preco: preco}
 		vetor = append(vetor, p)
 	}
 

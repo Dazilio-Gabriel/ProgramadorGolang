@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produtos — Consys API (Go)</title>
+  <style>
+    :root { --azul: #2563eb; --cinza: #64748b; --borda: #e2e8f0; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      margin: 0; background: #f8fafc; color: #0f172a;
+    }
+    header {
+      background: var(--azul); color: #fff; padding: 20px 32px;
+    }
+    header h1 { margin: 0; font-size: 20px; }
+    header p { margin: 4px 0 0; opacity: .85; font-size: 13px; }
+    main { max-width: 900px; margin: 28px auto; padding: 0 16px; }
+    .barra { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    button {
+      background: var(--azul); color: #fff; border: 0; border-radius: 6px;
+      padding: 8px 14px; font-size: 14px; cursor: pointer;
+    }
+    button:hover { filter: brightness(1.08); }
+    .status { color: var(--cinza); font-size: 14px; }
+    table {
+      width: 100%; border-collapse: collapse; background: #fff;
+      border: 1px solid var(--borda); border-radius: 8px; overflow: hidden;
+    }
+    th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--borda); }
+    th { background: #f1f5f9; font-size: 13px; text-transform: uppercase; letter-spacing: .03em; color: var(--cinza); }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #f8fafc; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .vazio td { text-align: center; color: var(--cinza); padding: 24px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📦 Produtos</h1>
+    <p>Consys · API em Go + MySQL · dados via <code>fetch('/api/produtos')</code></p>
+  </header>
+
+  <main>
+    <div class="barra">
+      <button id="recarregar">↻ Recarregar</button>
+      <span class="status" id="status">carregando…</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nome</th>
+          <th class="num">Preço</th>
+          <th class="num">Estoque</th>
+          <th class="num">Total (R$)</th>
+        </tr>
+      </thead>
+      <tbody id="corpo">
+        <!-- o JavaScript preenche aqui -->
+      </tbody>
+    </table>
+  </main>
+
+  <script>
+    const corpo = document.getElementById("corpo");
+    const status = document.getElementById("status");
+
+    // formata número como Real (R$)
+    const real = (n) => Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    // pede o JSON pro Go e desenha a tabela
+    function carregarProdutos() {
+      status.textContent = "carregando…";
+      corpo.innerHTML = "";
+
+      fetch("/api/produtos")
+        .then((resp) => {
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+          return resp.json();
+        })
+        .then((produtos) => {
+          if (!produtos || produtos.length === 0) {
+            corpo.innerHTML = '<tr class="vazio"><td colspan="5">Nenhum produto encontrado.</td></tr>';
+            status.textContent = "0 produtos";
+            return;
+          }
+
+          // para cada produto, monta uma linha <tr> (o "browse")
+          produtos.forEach((p) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${p.Codigo}</td>
+              <td>${p.Nome}</td>
+              <td class="num">${real(p.Preco)}</td>
+              <td class="num">${p.Quantidade}</td>
+              <td class="num">${real(p.Preco * p.Quantidade)}</td>`;
+            corpo.appendChild(tr);
+          });
+
+          status.textContent = produtos.length + " produto(s)";
+        })
+        .catch((err) => {
+          corpo.innerHTML = '<tr class="vazio"><td colspan="5">Erro ao carregar: ' + err.message + "</td></tr>";
+          status.textContent = "falhou";
+        });
+    }
+
+    document.getElementById("recarregar").addEventListener("click", carregarProdutos);
+    carregarProdutos(); // carrega assim que a página abre
+  </script>
+</body>
+</html>

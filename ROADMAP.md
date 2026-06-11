@@ -19,6 +19,8 @@ HTML + JS  --- AJAX (fetch) --->    API REST (net/http)  ---SQL--->  check_fl02
 - O **Go** faz o papel do `oBase:AbreTabe()/ValoCamp()`: abre conexão, roda SQL, devolve dados — mas em **JSON** em vez de desenhar `ConsBrow`.
 - O **HTML/JS** faz o papel do `ConsForm`/`ConsBrow`: mostra a tabela e o formulário no navegador. O `fetch()` do JS é o "AJAX".
 
+> 🎯 **Quem consome esta API é o xHarbour** (outro programa Consys), **não** um navegador. Por isso REST/JSON é a escolha certa: qualquer cliente consome — navegador, xHarbour, app mobile. **Consequência prática:** a "tela HTML" (Fase 4) é só **exercício de aprendizado**; ela **não está no caminho de entrega**. O que importa pro xHarbour é a API responder GET (ler) e POST/PUT/DELETE (gravar).
+
 ---
 
 ## Mapa mental: Harbour → Go
