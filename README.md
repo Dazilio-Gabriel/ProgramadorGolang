@@ -14,9 +14,9 @@ Transformar o conhecimento em sistemas desktop (ERP, CRUD, SQL) em habilidades d
 | :---- | :---------------------------------- | :-------------- |
 | **0** | Configuração do Ambiente            | ✅ Concluído    |
 | **1** | Fundamentos da Linguagem (Terminal) | ✅ Concluído    |
-| **2** | Primeiro Servidor HTTP              | 🟡 Em andamento |
-| **3** | Conexão MySQL (check_fl02)          | 📅 Planejado    |
-| **4** | Frontend (AJAX / Fetch)             | 📅 Planejado    |
+| **2** | Primeiro Servidor HTTP              | ✅ Concluído    |
+| **3** | Conexão MySQL (check_fl02)          | ✅ Concluído    |
+| **4** | Frontend (AJAX / Fetch)             | 🟡 Em andamento |
 | **5** | CRUD Completo                       | 📅 Planejado    |
 
 > Veja o plano detalhado em: [ROADMAP.md](./ROADMAP.md)

@@ -20,7 +20,6 @@ type Produto struct {
 func main() {
 
 	http.HandleFunc("/api/produtos", listaProdutosBancoDeDados)
-	log.Println("servidor no ar → http://localhost:8080/api/produtos (Ctrl+C para parar)")
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -40,11 +39,16 @@ func listaProdutosBancoDeDados(w http.ResponseWriter, r *http.Request) {
 
 	err = db.Ping()
 	if err != nil {
-		log.Fatal("erro ao conectar no banco: ", err)
+		http.Error(w, "deu erro ao buscar produtos", 500)
+		return
 	}
 	log.Println("conectado ao MySQL")
 
-	rows, err := db.QueryContext(ctx, "SELECT id, codigo, nome, preco, quantidade FROM PRODUTOS")
+	rows, err := db.QueryContext(ctx, "SELECT * FROM PRODUTOS")
+	if err != nil {
+		log.Fatal("Select incorreto")
+	}
+	defer rows.Close()
 
 	var vetor []Produto
 	for rows.Next() {
@@ -54,7 +58,7 @@ func listaProdutosBancoDeDados(w http.ResponseWriter, r *http.Request) {
 		}
 		p := Produto{Codigo: codigo, Nome: nome, Preco: preco, Quantidade: quantidade}
 		vetor = append(vetor, p)
-
 	}
+
 	json.NewEncoder(w).Encode(vetor)
 }

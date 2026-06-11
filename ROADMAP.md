@@ -64,20 +64,21 @@ Conceitos:
 - [ ] (reforço) [Tour of Go](https://go.dev/tour) + [Go by Example](https://gobyexample.com)
 - **Pronto quando:** criar `struct Produto` + `[]Produto` + `for range` → ✅ feito
 
-### Fase 2 — Primeiro servidor HTTP (2 a 3 dias)  🟡 *VOCÊ ESTÁ AQUI*
-- [ ] Pacotes `net/http` (servidor) e `encoding/json` (devolver JSON)
-- [ ] Rota `GET /api/produtos` devolvendo uma lista **fixa, hardcoded** em JSON
-- [ ] Testar com navegador e com **Thunder Client** (extensão do VS Code)
-- **Pronto quando:** abrir `http://localhost:8080/api/produtos` e ver o JSON
+### Fase 2 — Primeiro servidor HTTP  ✅ COMPLETA
+- [x] Pacotes `net/http` (servidor) e `encoding/json` (devolver JSON)
+- [x] Rota `GET /api/produtos` devolvendo JSON _(pulou a lista hardcoded e já foi direto pro banco — ver Fase 3)_
+- [ ] Testar com **Thunder Client** (extensão do VS Code) — confirmar a resposta JSON
+- **Pronto quando:** abrir `http://localhost:8080/api/produtos` e ver o JSON ✅
 
-### Fase 3 — Conectar no MySQL e dar o SELECT (3 a 5 dias)  ⭐ *primeiro marco real*
-- [ ] `database/sql` + driver `github.com/go-sql-driver/mysql` (`go get`)
-- [ ] String de conexão: user `check`, senha `consys`, banco `check_fl02`, host `localhost`
-- [ ] Descobrir a tabela de produtos real do Consys e suas colunas
-- [ ] `GET /api/produtos` roda `SELECT` real e devolve JSON
-- **Pronto quando:** a rota mostrar os produtos reais do banco
+### Fase 3 — Conectar no MySQL e dar o SELECT  ✅ COMPLETA *(primeiro marco real batido! 🎉)*
+- [x] `database/sql` + driver `github.com/go-sql-driver/mysql` (`go get`)
+- [x] String de conexão funcionando (hoje: user `root`, banco de teste `apigo` — trocar pro `check`/`check_fl02` do Consys quando for pra valer)
+- [x] Tabela `PRODUTOS` no banco de teste `apigo` _(depois: apontar pra tabela real do Consys)_
+- [x] `GET /api/produtos` roda `SELECT` real e mostra o JSON dos produtos no navegador ✅
+- **Pronto quando:** a rota mostrar os produtos reais do banco ✅
+> Refino opcional pendente: trocar `SELECT *` pelas colunas nomeadas (já explicado) — não trava nada agora.
 
-### Fase 4 — A tela: HTML/JS via AJAX (3 a 5 dias)
+### Fase 4 — A tela: HTML/JS via AJAX  🟡 *VOCÊ ESTÁ AQUI*
 - [ ] Página HTML; no JS, `fetch('/api/produtos')` → montar uma `<table>`
 - [ ] O Go também serve os arquivos estáticos (`http.FileServer`)
 - **Pronto quando:** abrir a página e ver a tabela preenchida pelo banco
@@ -129,13 +130,13 @@ PWD      = consys
 
 ---
 
-# 📒 Anotações das Lições — Fase 1 (para estudar em casa)
+# 📒 Anotações das Lições — Fases 1 → 3 (para estudar em casa)
 
-> **🔖 VOCÊ ESTÁ NA LIÇÃO 6** (primeiro servidor HTTP — `net/http` + `encoding/json`) → a **Fase 2 começou**.
-> **Fase 1 (a linguagem) — núcleo concluído** ✅: variáveis, struct, slice, `for range`, funções/métodos e **tratamento de erro** (Lição 5).
-> **Adiados de propósito (NÃO esquecidos):** `map` e **ponteiros** (`*`/`&`). Entram quando forem úteis de verdade — ponteiros na **Fase 3** (no `rows.Scan(&campo)` do MySQL); `map` quando aparecer. Aprender na hora que o conceito tem uso concreto gruda muito melhor.
-> **Agora:** Lição 6 — subir um servidor que devolve a lista de produtos em **JSON** na rota `GET /api/produtos`.
-> Pendência leve (opcional): no exercício 1 da Lição 5, `diviNumb` devolver também o **resto** (`(int, int, error)`).
+> **🔖 VOCÊ ESTÁ NA LIÇÃO 8** (a tela: HTML + JS com `fetch` montando a `<table>`) → **Fase 3 concluída ✅, Fase 4 em andamento 🟡**.
+> **Fase 1** ✅ (a linguagem). **Fase 2** ✅ (servidor HTTP + JSON). **Fase 3** ✅ (MySQL + `SELECT` real aparecendo no navegador — primeiro marco batido! 🎉).
+> **Ponteiros já apareceram** ✅ no `rows.Scan(&...)`. (`map` segue adiado até aparecer um uso concreto.)
+> **Agora:** Lição 8 — uma página HTML que o próprio Go serve (`http.FileServer`), e um JS que chama `fetch('/api/produtos')` e desenha a tabela. É o "ConsBrow" do navegador.
+> Pendência leve (opcional): trocar `SELECT *` pelas colunas; e no exercício 1 da Lição 5, `diviNumb` devolver também o **resto** (`(int, int, error)`).
 
 ## 🏠 Quando chegar em casa (ambiente no Mac)
 - [ ] Instalar o Go: https://go.dev/dl — conferir com `go version`
@@ -254,3 +255,49 @@ O `.exe` Harbour desenha a tela e espera o usuário teclar; um servidor web fica
 **Ordem no `main`:** 1º registra a rota (`HandleFunc`) → 2º liga o servidor (`ListenAndServe`, que trava ali escutando).
 
 **Pronto quando:** `go run .` dentro de `api/` (vai *travar* = está escutando, é normal), abrir `http://localhost:8080/api/produtos` no navegador e ver o JSON. Parar o servidor: `Ctrl+C`.
+
+---
+
+## Lição 7 — MySQL de verdade: `database/sql` + `SELECT` (Fase 3)
+O `listarProdutos()` fixo da Lição 4 some — agora os dados vêm do banco. São **4 peças**:
+
+- **1) Abrir o pool (`sql.Open`):** `db, err := sql.Open("mysql", "user:senha@tcp(host:porta)/banco")`. ⚠️ `sql.Open` **não conecta** ainda — só prepara um *pool de conexões*. Por isso vem o `db.Ping()` logo depois: é ele que **testa a conexão de verdade**.
+- **2) O driver "anônimo":** `import _ "github.com/go-sql-driver/mysql"`. O `_` (blank) importa **só pelos efeitos colaterais** — o driver se registra sozinho no `database/sql`. Você nunca chama nada dele direto; o `"mysql"` lá no `sql.Open` é quem o aciona.
+- **3) Rodar e percorrer (`Query` + `rows.Next`/`Scan`):** `rows, err := db.QueryContext(ctx, "SELECT ...")` → laço `for rows.Next() { rows.Scan(&campo1, &campo2, ...) }`. **É AQUI que os ponteiros (`&`) valem de verdade:** o `Scan` precisa do **endereço** das variáveis pra *preencher* elas. O `rows.Next()` é o `DbSkip()`/`while !Eof()` do Harbour; o `Scan` é o `ValoCamp()` jogando cada coluna numa variável.
+- **4) Devolver JSON:** igual à Lição 6 — `json.NewEncoder(w).Encode(vetor)`.
+
+### ⚠️ As 3 pontas a fechar (o que está errado hoje no `api/main.go`)
+1. **Falta `if err != nil` depois do `QueryContext`** — o bug da Lição 5 de novo. Se a query falhar, `rows` vem `nil` e o `rows.Next()`/`rows.Close()` dão **panic** (derrubam o servidor). Sempre cheque o erro **antes** de usar `rows`.
+2. **`rows.Close()` → troque por `defer rows.Close()`** logo após checar o erro: garante o fechamento mesmo se a função sair no meio.
+3. **`SELECT *` → volte pras colunas nomeadas** (`SELECT id, codigo, nome, preco, quantidade`): com `*`, o `Scan` quebra calado se a ordem das colunas mudar.
+
+> **Próximos upgrades (Fase 6):** abrir o `db` **uma vez no `main`** (não a cada request) e, em vez de `log.Fatal` no handler (que mata o servidor inteiro), responder **HTTP 500** pro request — numa API, um erro de um pedido não pode derrubar o servidor.
+
+**Pronto quando:** fechadas as 3 pontas, `go run .` dentro de `api/`, abrir `http://localhost:8080/api/produtos` e ver os **produtos reais do banco** em JSON. → marca a **Fase 3 ✅** e abre a **Fase 4** (a tela com `fetch`).
+
+---
+
+## Lição 8 — A tela: HTML + JS via `fetch` (Fase 4)
+Até aqui o Go só **cospe JSON**. Agora entra a **tela** — o "ConsBrow" do navegador. A mágica: o navegador pede o JSON pro Go por trás dos panos e **desenha a tabela sozinho**, sem recarregar a página. São **3 peças novas**:
+
+- **1) O Go passa a servir arquivos (`http.FileServer`):** além da rota `/api/produtos` (que devolve dados), o servidor agora também entrega **arquivos** — o `index.html`, o `.css`, o `.js`. Uma linha resolve: `http.Handle("/", http.FileServer(http.Dir("web")))` → tudo que estiver na pasta `web/` vira acessível pelo navegador. É o Go fazendo papel de "servidor de site", não só de "servidor de dados".
+- **2) O HTML (a "tela em branco"):** um `index.html` simples com um `<table>` **vazio** (só o cabeçalho: Código, Nome, Preço, Estoque) e um `<tbody id="corpo">` que começa sem nada. É o esqueleto do browse — as linhas vão ser preenchidas pelo JS.
+- **3) O JavaScript (`fetch` + montar as linhas):** o `fetch('/api/produtos')` é o **AJAX** — o JS pede o JSON pro Go pela rede, recebe a lista de produtos e, num laço, cria uma linha `<tr>` pra cada produto e joga dentro do `<tbody>`. É o `for ... range` do JS desenhando o browse.
+
+### Ponte com o Harbour
+| No Consys/Harbour                       | Na web (Fase 4)                                  |
+|-----------------------------------------|--------------------------------------------------|
+| `ConsBrow` desenhando a grade           | a `<table>` no HTML                              |
+| `oBase:AbreTabe()` buscando os dados    | `fetch('/api/produtos')` (o JS pedindo o JSON)  |
+| o loop que preenche cada linha do browse| o `forEach`/`for` do JS criando os `<tr>`        |
+| tela e dados no **mesmo** `.exe`        | tela (navegador) e dados (Go) **separados**, conversando por JSON |
+
+**Estrutura de pastas que vamos criar:**
+```
+api/
+  main.go        (já existe — só ganha a linha do FileServer)
+  web/
+    index.html   (a tela)
+```
+
+**Pronto quando:** abrir `http://localhost:8080/` (a página, não o `/api/produtos`) e ver a **tabela preenchida** com os produtos do banco.
