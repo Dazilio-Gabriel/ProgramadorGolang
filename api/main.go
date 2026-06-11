@@ -1,63 +1,58 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type Produto struct {
-	Codigo     string
-	Nome       string
-	Preco      float64
-	Quantidade int
+	Codigo string  `json:"codigo"`
+	Nome   string  `json:"nome"`
+	Preco  float64 `json:"preco"`
 }
 
 func main() {
-
-	http.HandleFunc("/api/produtos", listaProdutosBancoDeDados)
-	http.Handle("/", http.FileServer(http.Dir("web")))
+	http.HandleFunc("/api/produtos", listarProdutos)
+	log.Println("servidor no ar -> http://localhost:8080/api/produtos")
 	http.ListenAndServe(":8080", nil)
 }
 
-func listaProdutosBancoDeDados(w http.ResponseWriter, r *http.Request) {
-	var codigo string
-	var nome string
-	var preco float64
-
-	ctx := context.Background()
-
+func listarProdutos(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("mysql", "root:consys@tcp(localhost:3306)/consys")
 	if err != nil {
-		log.Fatal("erro ao abrir o banco: ", err)
-	}
-
-	err = db.Ping()
-	if err != nil {
-		http.Error(w, "deu erro ao buscar produtos", 500)
+		http.Error(w, "erro ao abrir o banco", http.StatusInternalServerError)
 		return
 	}
-	log.Println("conectado ao MySQL")
+	defer db.Close()
 
-	rows, err := db.QueryContext(ctx, "SELECT sr_recno,ccodigo,cdesc,cvenda FROM alqui")
+	rows, err := db.Query("SELECT ccodigo, cdesc, cvenda FROM alqui where sr_deleted <> 'T'")
 	if err != nil {
-		log.Fatal("Select incorreto")
+		http.Error(w, "erro ao consultar produtos", http.StatusInternalServerError)
+		return
 	}
 	defer rows.Close()
 
-	var vetor []Produto
+	var produtos []Produto
 	for rows.Next() {
-		err = rows.Scan(&codigo, &nome, &preco)
-		if err != nil {
-			log.Fatal(err)
+		var p Produto
+		if err := rows.Scan(&p.Codigo, &p.Nome, &p.Preco); err != nil {
+			http.Error(w, "erro ao ler produto", http.StatusInternalServerError)
+			return
 		}
-		p := Produto{Codigo: codigo, Nome: nome, Preco: preco}
-		vetor = append(vetor, p)
+		produtos = append(produtos, p)
 	}
 
-	json.NewEncoder(w).Encode(vetor)
+	data, err := json.Marshal(produtos)
+	if err != nil {
+		http.Error(w, "erro ao gerar JSON", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
+	w.Write(data)
 }
