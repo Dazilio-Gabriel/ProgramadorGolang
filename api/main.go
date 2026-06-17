@@ -31,6 +31,10 @@ func produtos(w http.ResponseWriter, r *http.Request) {
 		listarProdutos(w, r)
 	case http.MethodPost:
 		inserirProduto(w, r)
+	case http.MethodDelete:
+		excluirProduto(w, r)
+	// case http.MethodPut:
+	// 	atualizarProduto(w, r)
 	default:
 		http.Error(w, "metodo nao suportado", http.StatusMethodNotAllowed)
 	}
@@ -107,6 +111,87 @@ func inserirProduto(w http.ResponseWriter, r *http.Request) {
 	escreveJSON(w, http.StatusCreated, map[string]any{
 		"ok":     true,
 		"recno":  recno,
+		"codigo": p.Codigo,
+		"nome":   p.Nome,
+		"preco":  p.Preco,
+	})
+}
+
+func excluirProduto(w http.ResponseWriter, r *http.Request) {
+
+	codigo := strings.TrimSpace(r.URL.Query().Get("codigo"))
+	if codigo == "" {
+		var p Produto
+		if err := json.NewDecoder(r.Body).Decode(&p); err == nil {
+			codigo = strings.TrimSpace(p.Codigo)
+		}
+	}
+	if codigo == "" {
+		escreveJSON(w, http.StatusBadRequest, map[string]any{"erro": "codigo e obrigatorio"})
+		return
+	}
+
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		escreveJSON(w, http.StatusInternalServerError, map[string]any{"erro": "erro ao abrir o banco"})
+		return
+	}
+	defer db.Close()
+
+	res, err := db.Exec("UPDATE alqui SET sr_deleted = 'T' WHERE ccodigo = ? AND sr_deleted <> 'T'", codigo)
+	if err != nil {
+		escreveJSON(w, http.StatusInternalServerError, map[string]any{"erro": "erro ao excluir: " + err.Error()})
+		return
+	}
+
+	linhas, _ := res.RowsAffected()
+	if linhas == 0 {
+		escreveJSON(w, http.StatusNotFound, map[string]any{"erro": "produto nao encontrado"})
+		return
+	}
+
+	escreveJSON(w, http.StatusOK, map[string]any{
+		"ok":     true,
+		"codigo": codigo,
+	})
+}
+
+func atualizarProduto(w http.ResponseWriter, r *http.Request) {
+	var p Produto
+	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+		escreveJSON(w, http.StatusBadRequest, map[string]any{"erro": "JSON invalido"})
+		return
+	}
+
+	p.Codigo = strings.TrimSpace(p.Codigo)
+	p.Nome = strings.TrimSpace(p.Nome)
+	if p.Codigo == "" || p.Nome == "" {
+		escreveJSON(w, http.StatusBadRequest, map[string]any{"erro": "codigo e nome sao obrigatorios"})
+		return
+	}
+
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		escreveJSON(w, http.StatusInternalServerError, map[string]any{"erro": "erro ao abrir o banco"})
+		return
+	}
+	defer db.Close()
+
+	res, err := db.Exec("UPDATE alqui SET cdesc = ?, cvenda = ? WHERE ccodigo = ? AND sr_deleted <> 'T'",
+		p.Nome, p.Preco, p.Codigo)
+	if err != nil {
+		escreveJSON(w, http.StatusInternalServerError, map[string]any{"erro": "erro ao atualizar: " + err.Error()})
+		return
+	}
+
+	linhas, _ := res.RowsAffected()
+	if linhas == 0 {
+		escreveJSON(w, http.StatusNotFound, map[string]any{"erro": "produto nao encontrado"})
+		return
+	}
+
+	escreveJSON(w, http.StatusOK, map[string]any{
+		"ok":     true,
 		"codigo": p.Codigo,
 		"nome":   p.Nome,
 		"preco":  p.Preco,
